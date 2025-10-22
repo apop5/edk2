@@ -6457,12 +6457,21 @@ HiiGetAltCfg (
     );
   if (AltCfgId != NULL) {
     GenerateSubStr (L"ALTCFG=", sizeof (UINT16), (VOID *)AltCfgId, 3, &AltIdStr);
+    if (AltIdStr == NULL) {
+      ASSERT (AltIdStr != NULL);
+      return EFI_OUT_OF_RESOURCES;
+    }
   }
 
   if (Name != NULL) {
     GenerateSubStr (L"NAME=", StrLen (Name) * sizeof (CHAR16), (VOID *)Name, 2, &NameStr);
   } else {
     GenerateSubStr (L"NAME=", 0, NULL, 2, &NameStr);
+  }
+
+  if (NameStr == NULL) {
+    ASSERT (NameStr != NULL);
+    return EFI_OUT_OF_RESOURCES;
   }
 
   while (*StringPtr != 0) {
@@ -6561,6 +6570,12 @@ HiiGetAltCfg (
       //
       // Search the <ConfigAltResp> to get the <AltResp> with AltCfgId.
       //
+      if (AltIdStr == NULL) {
+        ASSERT (AltIdStr != NULL);
+        Status = EFI_NOT_FOUND;
+        goto Exit;
+      }
+
       if (StrnCmp (StringPtr, AltIdStr, StrLen (AltIdStr)) != 0) {
         GuidFlag = FALSE;
         NameFlag = FALSE;

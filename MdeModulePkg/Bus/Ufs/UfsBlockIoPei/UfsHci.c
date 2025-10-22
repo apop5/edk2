@@ -553,7 +553,7 @@ UfsCreateDMCommandDesc (
 
   if (((Opcode != UtpQueryFuncOpcodeRdFlag) && (Opcode != UtpQueryFuncOpcodeSetFlag) &&
        (Opcode != UtpQueryFuncOpcodeClrFlag) && (Opcode != UtpQueryFuncOpcodeTogFlag) &&
-       (Opcode != UtpQueryFuncOpcodeRdAttr)) && ((DataSize == 0) || (Data == NULL)))
+       (Opcode != UtpQueryFuncOpcodeRdAttr)) && ((DataSize != 0) && (Data == NULL)))
   {
     return EFI_INVALID_PARAMETER;
   }

@@ -632,13 +632,28 @@ CompareBlockElementDefault (
   // Make BlockPtr point to the first <BlockConfig> with AltConfigHdr in DefaultAltCfgResp.
   //
   AltConfigHdrPtr = StrStr (DefaultAltCfgResp, AltConfigHdr);
-  ASSERT (AltConfigHdrPtr != NULL);
+  if (AltConfigHdrPtr == NULL ) {
+    ASSERT (AltConfigHdrPtr != NULL);
+    Status = EFI_OUT_OF_RESOURCES;
+    goto Exit;
+  }
+
   BlockPtr = StrStr (AltConfigHdrPtr, L"&OFFSET=");
+  if (BlockPtr == NULL) {
+    ASSERT (BlockPtr != NULL);
+    Status = EFI_OUT_OF_RESOURCES;
+    goto Exit;
+  }
+
   //
   // Make StringPtr point to the AltConfigHdr in ConfigAltResp.
   //
   StringPtr = StrStr (*ConfigAltResp, AltConfigHdr);
-  ASSERT (StringPtr != NULL);
+  if (StringPtr == NULL) {
+    ASSERT (StringPtr != NULL);
+    Status = EFI_OUT_OF_RESOURCES;
+    goto Exit;
+  }
 
   while (BlockPtr != NULL) {
     //
@@ -684,6 +699,12 @@ CompareBlockElementDefault (
       //
       if (AppendString == NULL) {
         AppendString = (EFI_STRING)AllocateZeroPool (AppendSize + sizeof (CHAR16));
+        if (AppendString == NULL) {
+          ASSERT (AppendString != NULL);
+          Status = EFI_OUT_OF_RESOURCES;
+          goto Exit;
+        }
+
         StrnCatS (AppendString, AppendSize / sizeof (CHAR16) + 1, BlockPtrStart, AppendSize / sizeof (CHAR16));
       } else {
         TotalSize    = StrSize (AppendString) + AppendSize + sizeof (CHAR16);
@@ -778,15 +799,26 @@ CompareNameElementDefault (
   // Make NvConfigPtr point to the first <NvConfig> with AltConfigHdr in DefaultAltCfgResp.
   //
   NvConfigPtr = StrStr (DefaultAltCfgResp, AltConfigHdr);
-  ASSERT (NvConfigPtr != NULL);
+  if (NvConfigPtr == NULL) {
+    ASSERT (NvConfigPtr != NULL);
+    goto Exit;
+  }
+
   NvConfigPtr = StrStr (NvConfigPtr + StrLen (AltConfigHdr), L"&");
   //
   // Make StringPtr point to the first <NvConfig> with AltConfigHdr in ConfigAltResp.
   //
   StringPtr = StrStr (*ConfigAltResp, AltConfigHdr);
-  ASSERT (StringPtr != NULL);
+  if (StringPtr == NULL) {
+    ASSERT (StringPtr != NULL);
+    goto Exit;
+  }
+
   StringPtr = StrStr (StringPtr + StrLen (AltConfigHdr), L"&");
-  ASSERT (StringPtr != NULL);
+  if (StringPtr == NULL) {
+    ASSERT (StringPtr != NULL);
+    goto Exit;
+  }
 
   while (NvConfigPtr != NULL) {
     //
@@ -796,51 +828,53 @@ CompareNameElementDefault (
     NvConfigStart    = NvConfigPtr;
     NvConfigValuePtr = StrStr (NvConfigPtr + 1, L"=");
     ASSERT (NvConfigValuePtr != NULL);
-    TempChar          = *NvConfigValuePtr;
-    *NvConfigValuePtr = L'\0';
-    //
-    // Get the <Label> with AltConfigHdr in ConfigAltResp.
-    //
-    NvConfigExist = StrStr (StringPtr, NvConfigPtr);
-    if (NvConfigExist == NULL) {
+    if (NvConfigValuePtr != NULL) {
+      TempChar          = *NvConfigValuePtr;
+      *NvConfigValuePtr = L'\0';
       //
-      // Don't find same <Label> in ConfigAltResp.
-      // Calculate the size of <NvConfig>.
+      // Get the <Label> with AltConfigHdr in ConfigAltResp.
       //
-      *NvConfigValuePtr = TempChar;
-      NvConfigPtr       = StrStr (NvConfigPtr + 1, L"&");
-      if (NvConfigPtr != NULL) {
-        AppendSize = (NvConfigPtr - NvConfigStart) * sizeof (CHAR16);
-      } else {
-        AppendSize = StrSize (NvConfigStart);
-      }
-
-      //
-      // Copy the <NvConfig> to AppendString.
-      //
-      if (AppendString == NULL) {
-        AppendString = (EFI_STRING)AllocateZeroPool (AppendSize + sizeof (CHAR16));
-        StrnCatS (AppendString, AppendSize / sizeof (CHAR16) + 1, NvConfigStart, AppendSize / sizeof (CHAR16));
-      } else {
-        TotalSize    = StrSize (AppendString) + AppendSize + sizeof (CHAR16);
-        AppendString = (EFI_STRING)ReallocatePool (
-                                     StrSize (AppendString),
-                                     TotalSize,
-                                     AppendString
-                                     );
-        if (AppendString == NULL) {
-          Status = EFI_OUT_OF_RESOURCES;
-          goto Exit;
+      NvConfigExist = StrStr (StringPtr, NvConfigPtr);
+      if (NvConfigExist == NULL) {
+        //
+        // Don't find same <Label> in ConfigAltResp.
+        // Calculate the size of <NvConfig>.
+        //
+        *NvConfigValuePtr = TempChar;
+        NvConfigPtr       = StrStr (NvConfigPtr + 1, L"&");
+        if (NvConfigPtr != NULL) {
+          AppendSize = (NvConfigPtr - NvConfigStart) * sizeof (CHAR16);
+        } else {
+          AppendSize = StrSize (NvConfigStart);
         }
 
-        StrnCatS (AppendString, TotalSize / sizeof (CHAR16), NvConfigStart, AppendSize / sizeof (CHAR16));
+        //
+        // Copy the <NvConfig> to AppendString.
+        //
+        if (AppendString == NULL) {
+          AppendString = (EFI_STRING)AllocateZeroPool (AppendSize + sizeof (CHAR16));
+          StrnCatS (AppendString, AppendSize / sizeof (CHAR16) + 1, NvConfigStart, AppendSize / sizeof (CHAR16));
+        } else {
+          TotalSize    = StrSize (AppendString) + AppendSize + sizeof (CHAR16);
+          AppendString = (EFI_STRING)ReallocatePool (
+                                       StrSize (AppendString),
+                                       TotalSize,
+                                       AppendString
+                                       );
+          if (AppendString == NULL) {
+            Status = EFI_OUT_OF_RESOURCES;
+            goto Exit;
+          }
+
+          StrnCatS (AppendString, TotalSize / sizeof (CHAR16), NvConfigStart, AppendSize / sizeof (CHAR16));
+        }
+      } else {
+        //
+        // To find next <Label> in DefaultAltCfgResp.
+        //
+        *NvConfigValuePtr = TempChar;
+        NvConfigPtr       = StrStr (NvConfigPtr + 1, L"&");
       }
-    } else {
-      //
-      // To find next <Label> in DefaultAltCfgResp.
-      //
-      *NvConfigValuePtr = TempChar;
-      NvConfigPtr       = StrStr (NvConfigPtr + 1, L"&");
     }
   }
 
@@ -924,7 +958,11 @@ CompareAndMergeDefaultString (
   // To find the <AltResp> with AltConfigHdr in DefaultAltCfgResp, ignore other <AltResp> which follow it.
   //
   AltConfigHdrPtr = StrStr (DefaultAltCfgResp, AltConfigHdr);
-  ASSERT (AltConfigHdrPtr != NULL);
+  if (AltConfigHdrPtr == NULL) {
+    ASSERT (AltConfigHdrPtr != NULL);
+    goto Exit;
+  }
+
   AltConfigHdrPtrNext = StrStr (AltConfigHdrPtr + 1, L"&GUID");
   if (AltConfigHdrPtrNext != NULL) {
     TempChar             = *AltConfigHdrPtrNext;
@@ -1946,9 +1984,10 @@ GetElementsFromRequest (
 
   TmpRequest = StrStr (ConfigRequest, L"PATH=");
   ASSERT (TmpRequest != NULL);
-
-  if ((StrStr (TmpRequest, L"&OFFSET=") != NULL) || (StrStr (TmpRequest, L"&") != NULL)) {
-    return TRUE;
+  if (TmpRequest != NULL) {
+    if ((StrStr (TmpRequest, L"&OFFSET=") != NULL) || (StrStr (TmpRequest, L"&") != NULL)) {
+      return TRUE;
+    }
   }
 
   return FALSE;
@@ -3640,7 +3679,7 @@ GetNameElement (
     BlockData->Name = AllocateCopyPool (StrSize (StringPtr), StringPtr);
     InsertBlockData (&RequestBlockArray->Entry, &BlockData);
 
-    if (HasValue) {
+    if (HasValue && (NextTag != NULL)) {
       //
       // If has value, skip the value.
       //

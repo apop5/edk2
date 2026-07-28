@@ -376,7 +376,7 @@ AcceptMemoryForAPsStack (
   // Parse the HOB list until end of list or matching type is found.
   //
   while (!END_OF_HOB_LIST (Hob) && !MemoryRegionFound) {
-    if (Hob.Header->HobType == EFI_HOB_TYPE_RESOURCE_DESCRIPTOR) {
+    if (IS_RESOURCE_DESCRIPTOR_HOB (Hob)) {
       DEBUG ((DEBUG_INFO, "\nResourceType: 0x%x\n", Hob.ResourceDescriptor->ResourceType));
 
       if (Hob.ResourceDescriptor->ResourceType == EFI_RESOURCE_MEMORY_UNACCEPTED) {
@@ -454,7 +454,7 @@ AcceptMemory (
   // Parse the HOB list until end of list or matching type is found.
   //
   while (!END_OF_HOB_LIST (Hob)) {
-    if (Hob.Header->HobType == EFI_HOB_TYPE_RESOURCE_DESCRIPTOR) {
+    if (IS_RESOURCE_DESCRIPTOR_HOB (Hob)) {
       if (Hob.ResourceDescriptor->ResourceType == EFI_RESOURCE_MEMORY_UNACCEPTED) {
         PhysicalStart = Hob.ResourceDescriptor->PhysicalStart;
         PhysicalEnd   = PhysicalStart + Hob.ResourceDescriptor->ResourceLength;
@@ -676,6 +676,19 @@ ValidateHobList (
                                                             EFI_RESOURCE_ATTRIBUTE_MORE_RELIABLE))) != 0)
         {
           DEBUG ((DEBUG_ERROR, "HOB: Unknow ResourceDescriptor ResourceAttribute type. Type: 0x%08x\n", Hob.ResourceDescriptor->ResourceAttribute));
+          return FALSE;
+        }
+
+        break;
+
+      case EFI_HOB_TYPE_RESOURCE_DESCRIPTOR2:
+        if (Hob.Header->HobLength != sizeof (EFI_HOB_RESOURCE_DESCRIPTOR2)) {
+          DEBUG ((DEBUG_ERROR, "HOB: Hob length is not equal corresponding hob structure. Type: 0x%04x\n", EFI_HOB_TYPE_RESOURCE_DESCRIPTOR2));
+          return FALSE;
+        }
+
+        if (IsInValidList (Hob.ResourceDescriptor->ResourceType, EFI_RESOURCE_TYPE_LIST, ARRAY_SIZE (EFI_RESOURCE_TYPE_LIST)) == FALSE) {
+          DEBUG ((DEBUG_ERROR, "HOB: Unknow ResourceDescriptor ResourceType type. Type: 0x%08x\n", Hob.ResourceDescriptor->ResourceType));
           return FALSE;
         }
 

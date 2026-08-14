@@ -212,11 +212,16 @@ PostFspmHobProcess (
     //
     // Report the resource hob
     //
-    BuildResourceDescriptorHob (
+    BuildResourceDescriptor2Hob (
       Hob.ResourceDescriptor->ResourceType,
       Hob.ResourceDescriptor->ResourceAttribute,
       Hob.ResourceDescriptor->PhysicalStart,
-      Hob.ResourceDescriptor->ResourceLength
+      Hob.ResourceDescriptor->ResourceLength,
+      (Hob.ResourceDescriptor->ResourceType == EFI_RESOURCE_SYSTEM_MEMORY) ?
+      EFI_MEMORY_WB :
+      (((Hob.ResourceDescriptor->ResourceType == EFI_RESOURCE_MEMORY_MAPPED_IO) ||
+        (Hob.ResourceDescriptor->ResourceType == EFI_RESOURCE_FIRMWARE_DEVICE)) ? EFI_MEMORY_UC : 0),
+      NULL
       );
   }
 
@@ -230,7 +235,7 @@ PostFspmHobProcess (
   DEBUG ((DEBUG_INFO, "FspMemorySize: 0x%x.\n", FspMemorySize));
 
   if (BootMode == BOOT_ON_S3_RESUME) {
-    BuildResourceDescriptorHob (
+    BuildResourceDescriptor2Hob (
       EFI_RESOURCE_SYSTEM_MEMORY,
       (
        EFI_RESOURCE_ATTRIBUTE_PRESENT |
@@ -242,7 +247,9 @@ PostFspmHobProcess (
        EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
       ),
       BASE_1MB,
-      LowMemorySize
+      LowMemorySize,
+      EFI_MEMORY_WB,
+      NULL
       );
 
     S3PeiMemBase = 0;
@@ -298,7 +305,7 @@ PostFspmHobProcess (
     //
     // Report the main memory
     //
-    BuildResourceDescriptorHob (
+    BuildResourceDescriptor2Hob (
       EFI_RESOURCE_SYSTEM_MEMORY,
       (
        EFI_RESOURCE_ATTRIBUTE_PRESENT |
@@ -310,7 +317,9 @@ PostFspmHobProcess (
        EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
       ),
       BASE_1MB,
-      LowMemorySize
+      LowMemorySize,
+      EFI_MEMORY_WB,
+      NULL
       );
 
     //

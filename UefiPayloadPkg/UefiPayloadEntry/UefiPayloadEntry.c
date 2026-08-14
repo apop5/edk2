@@ -89,7 +89,14 @@ MemInfoCallbackMmio (
               EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
               EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE;
 
-  BuildResourceDescriptorHob (Type, Attribute, (EFI_PHYSICAL_ADDRESS)Base, Size);
+  BuildResourceDescriptor2Hob (
+    Type,
+    Attribute,
+    (EFI_PHYSICAL_ADDRESS)Base,
+    Size,
+    EFI_MEMORY_UC,
+    NULL
+    );
   DEBUG ((DEBUG_INFO, "buildhob: base = 0x%lx, size = 0x%lx, type = 0x%x\n", Base, Size, Type));
 
   if ((MemoryMapEntry->Type == E820_UNUSABLE) ||
@@ -315,7 +322,7 @@ MemInfoCallback (
               EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
               EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE;
 
-  BuildResourceDescriptorHob (Type, Attribute, (EFI_PHYSICAL_ADDRESS)Base, Size);
+  BuildResourceDescriptor2Hob (Type, Attribute, (EFI_PHYSICAL_ADDRESS)Base, Size, EFI_MEMORY_WB, NULL);
   DEBUG ((DEBUG_INFO, "buildhob: base = 0x%lx, size = 0x%lx, type = 0x%x\n", Base, Size, Type));
 
   if (MemoryMapEntry->Type == E820_ACPI) {
@@ -509,7 +516,14 @@ BuildGenericHob (
                        EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
                        EFI_RESOURCE_ATTRIBUTE_TESTED
                        );
-  BuildResourceDescriptorHob (EFI_RESOURCE_MEMORY_MAPPED_IO, ResourceAttribute, 0xFEC80000, SIZE_512KB);
+  BuildResourceDescriptor2Hob (
+    EFI_RESOURCE_MEMORY_MAPPED_IO,
+    ResourceAttribute,
+    0xFEC80000,
+    SIZE_512KB,
+    EFI_MEMORY_UC,
+    NULL
+    );
   BuildMemoryAllocationHob (0xFEC80000, SIZE_512KB, EfiMemoryMappedIO);
 }
 

@@ -218,7 +218,7 @@ ParseMemory (
     Attribute |= ECCAttribute;
   }
 
-  BuildResourceDescriptorHob (EFI_RESOURCE_SYSTEM_MEMORY, Attribute, StartAddress, NumberOfBytes);
+  BuildResourceDescriptor2Hob (EFI_RESOURCE_SYSTEM_MEMORY, Attribute, StartAddress, NumberOfBytes, EFI_MEMORY_WB, NULL);
 }
 
 /**
@@ -285,7 +285,7 @@ ParseReservedMemory (
       } else if (AsciiStrnCmp (TempStr, "special-purpose", AsciiStrLen ("special-purpose")) == 0) {
         Attribute = MEMORY_ATTRIBUTE_DEFAULT | EFI_RESOURCE_ATTRIBUTE_SPECIAL_PURPOSE;
         DEBUG ((DEBUG_INFO, "  special-purpose memory\n"));
-        BuildResourceDescriptorHob (EFI_RESOURCE_SYSTEM_MEMORY, Attribute, StartAddress, NumberOfBytes);
+        BuildResourceDescriptor2Hob (EFI_RESOURCE_SYSTEM_MEMORY, Attribute, StartAddress, NumberOfBytes, EFI_MEMORY_WB, NULL);
       } else if (AsciiStrnCmp (TempStr, "acpi-nvs", AsciiStrLen ("acpi-nvs")) == 0) {
         DEBUG ((DEBUG_INFO, "\n ********* acpi-nvs ********\n"));
         BuildMemoryAllocationHob (StartAddress, NumberOfBytes, EfiACPIMemoryNVS);

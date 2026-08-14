@@ -243,7 +243,7 @@ BuildFvHobs (
     Resource = *ResourceAttribute;
   }
 
-  BuildResourceDescriptorHob (EFI_RESOURCE_FIRMWARE_DEVICE, Resource, PhysicalStart, NumberOfBytes);
+  BuildResourceDescriptor2Hob (EFI_RESOURCE_FIRMWARE_DEVICE, Resource, PhysicalStart, NumberOfBytes, EFI_MEMORY_UC, NULL);
 }
 
 /**

@@ -312,7 +312,7 @@ PeilessStartup (
 
   BuildStackHob ((UINTN)SecCoreData->StackBase, SecCoreData->StackSize <<= 1);
 
-  BuildResourceDescriptorHob (
+  BuildResourceDescriptor2Hob (
     EFI_RESOURCE_SYSTEM_MEMORY,
     EFI_RESOURCE_ATTRIBUTE_PRESENT |
     EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
@@ -322,7 +322,9 @@ PeilessStartup (
     EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE |
     EFI_RESOURCE_ATTRIBUTE_TESTED,
     (UINT64)SecCoreData->TemporaryRamBase,
-    (UINT64)SecCoreData->TemporaryRamSize
+    (UINT64)SecCoreData->TemporaryRamSize,
+    EFI_MEMORY_WB,
+    NULL
     );
 
   //

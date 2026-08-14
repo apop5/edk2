@@ -67,11 +67,13 @@ BuildResourceDescriptorHobForUnacceptedMemory (
     //
   }
 
-  BuildResourceDescriptorHob (
+  BuildResourceDescriptor2Hob (
     ResourceType,
     ResourceAttribute,
     PhysicalStart,
-    ResourceLength
+    ResourceLength,
+    (ResourceType == EFI_RESOURCE_SYSTEM_MEMORY) ? EFI_MEMORY_WB : EFI_MEMORY_UC,
+    NULL
     );
 }
 
@@ -108,11 +110,14 @@ TransferTdxHobList (
         if (ResourceType == EFI_RESOURCE_MEMORY_UNACCEPTED) {
           BuildResourceDescriptorHobForUnacceptedMemory (Hob.ResourceDescriptor);
         } else {
-          BuildResourceDescriptorHob (
+          BuildResourceDescriptor2Hob (
             ResourceType,
             ResourceAttribute,
             Hob.ResourceDescriptor->PhysicalStart,
-            Hob.ResourceDescriptor->ResourceLength
+            Hob.ResourceDescriptor->ResourceLength,
+            (ResourceType == EFI_RESOURCE_SYSTEM_MEMORY) ?
+            EFI_MEMORY_WB : EFI_MEMORY_UC),
+            NULL
             );
         }
 

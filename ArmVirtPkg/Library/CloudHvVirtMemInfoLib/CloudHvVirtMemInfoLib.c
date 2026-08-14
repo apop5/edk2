@@ -105,11 +105,13 @@ CloudHvVirtMemInfoPeiLibConstructor (
 
         // We should build Hob seperately for the memory node except the first one
         if (CurBase != MemBase) {
-          BuildResourceDescriptorHob (
+          BuildResourceDescriptor2Hob (
             EFI_RESOURCE_SYSTEM_MEMORY,
             ResourceAttributes,
             CurBase,
-            CurSize
+            CurSize,
+            EFI_MEMORY_WB,
+            NULL
             );
         } else {
           FirMemNodeBase = CurBase;

@@ -792,20 +792,24 @@ PeiLoadFixAddressHook (
             // Build separate resource HOB for this allocated range
             //
             if (MemoryHob->AllocDescriptor.MemoryBaseAddress > NextResourceHob->PhysicalStart) {
-              BuildResourceDescriptorHob (
+              BuildResourceDescriptor2Hob (
                 EFI_RESOURCE_SYSTEM_MEMORY,
                 GET_RESOURCE_HOB_ATTRIBUTE (NextHob),
                 NextResourceHob->PhysicalStart,
-                (MemoryHob->AllocDescriptor.MemoryBaseAddress - NextResourceHob->PhysicalStart)
+                (MemoryHob->AllocDescriptor.MemoryBaseAddress - NextResourceHob->PhysicalStart),
+                EFI_MEMORY_WB,
+                NULL
                 );
             }
 
             if (MemoryHob->AllocDescriptor.MemoryBaseAddress + MemoryHob->AllocDescriptor.MemoryLength < NextResourceHob->PhysicalStart + NextResourceHob->ResourceLength) {
-              BuildResourceDescriptorHob (
+              BuildResourceDescriptor2Hob (
                 EFI_RESOURCE_SYSTEM_MEMORY,
                 GET_RESOURCE_HOB_ATTRIBUTE (NextHob),
                 MemoryHob->AllocDescriptor.MemoryBaseAddress + MemoryHob->AllocDescriptor.MemoryLength,
-                (NextResourceHob->PhysicalStart + NextResourceHob->ResourceLength -(MemoryHob->AllocDescriptor.MemoryBaseAddress + MemoryHob->AllocDescriptor.MemoryLength))
+                (NextResourceHob->PhysicalStart + NextResourceHob->ResourceLength -(MemoryHob->AllocDescriptor.MemoryBaseAddress + MemoryHob->AllocDescriptor.MemoryLength)),
+                EFI_MEMORY_WB,
+                NULL
                 );
             }
 
@@ -956,7 +960,7 @@ PeiLoadFixAddressHook (
     //
     // rebuild resource HOB for PEI memory and reserved memory
     //
-    BuildResourceDescriptorHob (
+    BuildResourceDescriptor2Hob (
       EFI_RESOURCE_SYSTEM_MEMORY,
       (
        EFI_RESOURCE_ATTRIBUTE_PRESENT |
@@ -968,13 +972,15 @@ PeiLoadFixAddressHook (
        EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
       ),
       (TopLoadingAddress - TotalReservedMemorySize),
-      TotalReservedMemorySize
+      TotalReservedMemorySize,
+      EFI_MEMORY_WB,
+      NULL
       );
     //
     // rebuild resource for the remain memory if necessary
     //
     if (CurrentResourceHob->PhysicalStart < TopLoadingAddress - TotalReservedMemorySize) {
-      BuildResourceDescriptorHob (
+      BuildResourceDescriptor2Hob (
         EFI_RESOURCE_SYSTEM_MEMORY,
         (
          EFI_RESOURCE_ATTRIBUTE_PRESENT |
@@ -985,12 +991,14 @@ PeiLoadFixAddressHook (
          EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
         ),
         CurrentResourceHob->PhysicalStart,
-        (TopLoadingAddress - TotalReservedMemorySize - CurrentResourceHob->PhysicalStart)
+        (TopLoadingAddress - TotalReservedMemorySize - CurrentResourceHob->PhysicalStart),
+        EFI_MEMORY_WB,
+        NULL
         );
     }
 
     if (CurrentResourceHob->PhysicalStart + CurrentResourceHob->ResourceLength  > TopLoadingAddress ) {
-      BuildResourceDescriptorHob (
+      BuildResourceDescriptor2Hob (
         EFI_RESOURCE_SYSTEM_MEMORY,
         (
          EFI_RESOURCE_ATTRIBUTE_PRESENT |
@@ -1001,7 +1009,9 @@ PeiLoadFixAddressHook (
          EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
         ),
         TopLoadingAddress,
-        (CurrentResourceHob->PhysicalStart + CurrentResourceHob->ResourceLength  - TopLoadingAddress)
+        (CurrentResourceHob->PhysicalStart + CurrentResourceHob->ResourceLength  - TopLoadingAddress),
+        EFI_MEMORY_WB,
+        NULL
         );
     }
 

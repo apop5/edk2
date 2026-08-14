@@ -84,11 +84,13 @@ Returns:
         Attributes |= EFI_RESOURCE_ATTRIBUTE_TESTED;
       }
 
-      BuildResourceDescriptorHob (
+      BuildResourceDescriptor2Hob (
         EFI_RESOURCE_SYSTEM_MEMORY,
         Attributes,
         MemoryBase,
-        MemorySize
+        MemorySize,
+        EFI_MEMORY_WB,
+        NULL
         );
     }
 

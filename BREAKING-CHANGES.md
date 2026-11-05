@@ -133,6 +133,54 @@ together in the `edk2-stable202611` development cycle.
 [tianocore/edk2-platforms#1010](https://github.com/tianocore/edk2-platforms/pull/1010)
 
 
+##### Breaking Change: Remove Load Module At Fixed Address
+
+- **Status**: Removed
+- **Tracking Issue**: TBA
+- **Deprecation Issue**: TBA
+- **Removal Issue**: TBA
+- **Pull Request**: TBA
+- **Type**: Source-Level (Removal) - PCDs and configuration table;
+  Build-System (Removal) - Fixed-address loading options and reporting
+
+**What changed**: PEI, DXE, and SMM no longer support the Load Module At Fixed
+Address (LMFA) feature. Images use the normal allocation and relocation paths.
+
+**What was removed**:
+
+- `PcdLoadModuleAtFixAddressEnable` and the four page-count PCDs:
+  `PcdLoadFixAddressPeiCodePageNumber`,
+  `PcdLoadFixAddressBootTimeCodePageNumber`,
+  `PcdLoadFixAddressRuntimeCodePageNumber`, and
+  `PcdLoadFixAddressSmmCodePageNumber`.
+- `Guid/LoadModuleAtFixedAddress.h`, its configuration-table type, and
+  `gLoadFixedAddressConfigurationTableGuid`.
+- The `FIX_LOAD_TOP_MEMORY_ADDRESS` DSC setting and its build-time image
+  placement and PCD patching.
+- GenFds `-s` / `--specifyaddress`, GenFw `--address`, and the build report
+  selector `-Y FIXED_ADDRESS`.
+- Storage of LMFA addresses in PE section-header relocation and line-number
+  fields by GenFw and VolInfo.
+
+**Why it changed**: The fixed-address loading feature is being removed
+completely from the firmware cores and build tools.
+
+**What replaces it**: Normal firmware memory allocation and PE/COFF relocation.
+Ordinary image rebasing, execute-in-place (XIP) support, FV maps, and execution
+order reports remain available.
+
+**How to migrate**: Remove references to the deleted PCDs, configuration table,
+DSC setting, and command-line options from downstream platforms and scripts.
+Do not depend on the former fixed load addresses or the removed private PE
+section-header metadata.
+
+**Breaking conditions**: Downstream code consuming the removed interfaces must
+be updated. Platforms that enabled LMFA can no longer depend on its reserved
+code ranges or fixed placement.
+
+**Earliest removal**: Removed by this change in the `edk2-stable202611`
+development cycle.
+
 #### edk2-stable202611: Changes without Removal
 
 ##### Breaking Change: Rename the DMC-620 PMU Dynamic Tables interfaces

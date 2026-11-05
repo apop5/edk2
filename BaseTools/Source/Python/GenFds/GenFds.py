@@ -81,7 +81,6 @@ def resetFdsGlobalVariable():
     GenFdsGlobalVariable.SharpNumberPerLine = 40
     GenFdsGlobalVariable.FdfFile = ''
     GenFdsGlobalVariable.FdfFileTimeStamp = 0
-    GenFdsGlobalVariable.FixedLoadAddress = False
     GenFdsGlobalVariable.PlatformName = ''
 
     GenFdsGlobalVariable.BuildRuleFamily = DataType.TAB_COMPILER_MSFT
@@ -114,9 +113,6 @@ def GenFdsApi(FdsCommandDict, WorkSpaceDataBase=None):
         if FdsCommandDict.get("verbose"):
             EdkLogger.SetLevel(EdkLogger.VERBOSE)
             GenFdsGlobalVariable.VerboseMode = True
-
-        if FdsCommandDict.get("FixedAddress"):
-            GenFdsGlobalVariable.FixedLoadAddress = True
 
         if FdsCommandDict.get("quiet"):
             EdkLogger.SetLevel(EdkLogger.QUIET)
@@ -344,10 +340,6 @@ def GenFdsApi(FdsCommandDict, WorkSpaceDataBase=None):
 
         # Dsc Build Data will handle Pcd Settings from CommandLine.
 
-        """Modify images from build output if the feature of loading driver at fixed address is on."""
-        if GenFdsGlobalVariable.FixedLoadAddress:
-            GenFds.PreprocessImage(BuildWorkSpace, GenFdsGlobalVariable.ActivePlatform)
-
         # Record the FV Region info that may specific in the FD
         if FdfParserObj.Profile.FvDict and FdfParserObj.Profile.FdDict:
             for FvObj in FdfParserObj.Profile.FvDict.values():
@@ -400,7 +392,6 @@ def GenFdsApi(FdsCommandDict, WorkSpaceDataBase=None):
 def OptionsToCommandDict(Options):
     FdsCommandDict = {}
     FdsCommandDict["verbose"] = Options.verbose
-    FdsCommandDict["FixedAddress"] = Options.FixedAddress
     FdsCommandDict["quiet"] = Options.quiet
     FdsCommandDict["debug"] = Options.debug
     FdsCommandDict["Workspace"] = Options.Workspace
@@ -457,7 +448,6 @@ def myOptionParser():
     Parser.add_option("-t", "--tagname", type="string", dest="ToolChain", help="Using the tools: TOOL_CHAIN_TAG name to build the platform.",
                       action="callback", callback=SingleCheckCallback)
     Parser.add_option("-D", "--define", action="append", type="string", dest="Macros", help="Macro: \"Name [= Value]\".")
-    Parser.add_option("-s", "--specifyaddress", dest="FixedAddress", action="store_true", type=None, help="Specify driver load address.")
     Parser.add_option("--conf", action="store", type="string", dest="ConfDirectory", help="Specify the customized Conf directory.")
     Parser.add_option("--ignore-sources", action="store_true", dest="IgnoreSources", default=False, help="Focus to a binary build and ignore all source files")
     Parser.add_option("--pcd", action="append", dest="OptionPcd", help="Set PCD value by command line. Format: \"PcdName=Value\" ")
@@ -601,38 +591,6 @@ class GenFds(object):
                                            + str(UsedSizeValue) + ' (' + hex(UsedSizeValue) + ')' + ' used, '\
                                            + str(FreeSizeValue) + ' (' + hex(FreeSizeValue) + ')' + ' free')
 
-    ## PreprocessImage()
-    #
-    #   @param  BuildDb         Database from build meta data files
-    #   @param  DscFile         modules from dsc file will be preprocessed
-    #   @retval None
-    #
-    @staticmethod
-    def PreprocessImage(BuildDb, DscFile):
-        PcdDict = BuildDb.BuildObject[DscFile, TAB_COMMON, GenFdsGlobalVariable.TargetName, GenFdsGlobalVariable.ToolChainTag].Pcds
-        PcdValue = ''
-        for Key in PcdDict:
-            PcdObj = PcdDict[Key]
-            if PcdObj.TokenCName == 'PcdBsBaseAddress':
-                PcdValue = PcdObj.DefaultValue
-                break
-
-        if PcdValue == '':
-            return
-
-        Int64PcdValue = int(PcdValue, 0)
-        if Int64PcdValue == 0 or Int64PcdValue < -1:
-            return
-
-        TopAddress = 0
-        if Int64PcdValue > 0:
-            TopAddress = Int64PcdValue
-
-        ModuleDict = BuildDb.BuildObject[DscFile, TAB_COMMON, GenFdsGlobalVariable.TargetName, GenFdsGlobalVariable.ToolChainTag].Modules
-        for Key in ModuleDict:
-            ModuleObj = BuildDb.BuildObject[Key, TAB_COMMON, GenFdsGlobalVariable.TargetName, GenFdsGlobalVariable.ToolChainTag]
-            print(ModuleObj.BaseName + ' ' + ModuleObj.ModuleType)
-
     @staticmethod
     def GenerateGuidXRefFile(BuildDb, ArchList, FdfParserObj):
         GuidXRefFileName = os.path.join(GenFdsGlobalVariable.FvDir, "Guid.xref")
@@ -760,4 +718,3 @@ if __name__ == '__main__':
     if r < 0 or r > 127:
         r = 1
     exit(r)
-

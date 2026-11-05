@@ -273,13 +273,7 @@ Returns:
                         If it is combined with other action options, the later\n\
                         input action option will override the previous one.\n");
   fprintf (stdout, "  --rebase NewAddress   Rebase image to new base address. New address \n\
-                        is also set to the first none code section header.\n\
-                        It can't be combined with other action options\n\
-                        except for -o or -r option. It is a action option.\n\
-                        If it is combined with other action options, the later\n\
-                        input action option will override the previous one.\n");
-  fprintf (stdout, "  --address NewAddress  Set new address into the first none code \n\
-                        section header of the input image.\n\
+                        is stored in the PE image header.\n\
                         It can't be combined with other action options\n\
                         except for -o or -r option. It is a action option.\n\
                         If it is combined with other action options, the later\n\
@@ -901,84 +895,6 @@ Returns:
 }
 
 EFI_STATUS
-SetAddressToSectionHeader (
-  IN     CHAR8   *FileName,
-  IN OUT UINT8   *FileBuffer,
-  IN     UINT64  NewPe32BaseAddress
-  )
-/*++
-
-Routine Description:
-
-  Set new base address into the section header of PeImage
-
-Arguments:
-
-  FileName           - Name of file
-  FileBuffer         - Pointer to PeImage.
-  NewPe32BaseAddress - New Base Address for PE image.
-
-Returns:
-
-  EFI_SUCCESS          Set new base address into this image successfully.
-
---*/
-{
-  EFI_STATUS                            Status;
-  PE_COFF_LOADER_IMAGE_CONTEXT          ImageContext;
-  UINTN                                 Index;
-  EFI_IMAGE_OPTIONAL_HEADER_UNION       *ImgHdr;
-  EFI_IMAGE_SECTION_HEADER              *SectionHeader;
-
-  //
-  // Initialize context
-  //
-  memset (&ImageContext, 0, sizeof (ImageContext));
-  ImageContext.Handle     = (VOID *) FileBuffer;
-  ImageContext.ImageRead  = (PE_COFF_LOADER_READ_FILE) RebaseImageRead;
-  Status                  = PeCoffLoaderGetImageInfo (&ImageContext);
-  if (EFI_ERROR (Status)) {
-    Error (NULL, 0, 3000, "Invalid", "The input PeImage %s is not valid", FileName);
-    return Status;
-  }
-
-  if (ImageContext.RelocationsStripped) {
-    Error (NULL, 0, 3000, "Invalid", "The input PeImage %s has no relocation to be fixed up", FileName);
-    return Status;
-  }
-
-  //
-  // Get PeHeader pointer
-  //
-  ImgHdr = (EFI_IMAGE_OPTIONAL_HEADER_UNION *)(FileBuffer + ImageContext.PeCoffHeaderOffset);
-
-  //
-  // Get section header list
-  //
-  SectionHeader = (EFI_IMAGE_SECTION_HEADER *) (
-    (UINTN) ImgHdr +
-    sizeof (UINT32) +
-    sizeof (EFI_IMAGE_FILE_HEADER) +
-    ImgHdr->Pe32.FileHeader.SizeOfOptionalHeader
-    );
-
-  //
-  // Set base address into the first section header that doesn't point to code section.
-  //
-  for (Index = 0; Index < ImgHdr->Pe32.FileHeader.NumberOfSections; Index ++, SectionHeader ++) {
-    if ((SectionHeader->Characteristics & EFI_IMAGE_SCN_CNT_CODE) == 0) {
-      *(UINT64 *) &SectionHeader->PointerToRelocations = NewPe32BaseAddress;
-      break;
-    }
-  }
-
-  //
-  // BaseAddress is set to section header.
-  //
-  return EFI_SUCCESS;
-}
-
-EFI_STATUS
 RebaseImage (
   IN     CHAR8   *FileName,
   IN OUT UINT8   *FileBuffer,
@@ -1093,12 +1009,7 @@ Returns:
     return EFI_ABORTED;
   }
 
-  //
-  // Set new base address into section header
-  //
-  Status = SetAddressToSectionHeader (FileName, FileBuffer, NewPe32BaseAddress);
-
-  return Status;
+  return EFI_SUCCESS;
 }
 
 int
@@ -1472,25 +1383,6 @@ Returns:
       continue;
     }
 
-    if ((stricmp (argv[0], "--address") == 0)) {
-      if (argv[1][0] == '-') {
-        NegativeAddr = TRUE;
-        Status = AsciiStringToUint64 (argv[1] + 1, FALSE, &Temp64);
-      } else {
-        NegativeAddr = FALSE;
-        Status = AsciiStringToUint64 (argv[1], FALSE, &Temp64);
-      }
-      if (Status != EFI_SUCCESS) {
-        Error (NULL, 0, 1003, "Invalid option value", "%s = %s", argv[0], argv[1]);
-        goto Finish;
-      }
-      mOutImageType = FW_SET_ADDRESS_IMAGE;
-      NewBaseAddress = (UINT64) Temp64;
-      argc -= 2;
-      argv += 2;
-      continue;
-    }
-
     if ((stricmp (argv[0], "-p") == 0) || (stricmp (argv[0], "--pad") == 0)) {
       if (AsciiStringToUint64 (argv[1], FALSE, &Temp64) != EFI_SUCCESS) {
         Error (NULL, 0, 1003, "Invalid option value", "%s = %s", argv[0], argv[1]);
@@ -1712,9 +1604,6 @@ Returns:
     break;
   case FW_REBASE_IMAGE:
     VerboseMsg ("Rebase the input image to new base address.");
-    break;
-  case FW_SET_ADDRESS_IMAGE:
-    VerboseMsg ("Set the preferred address into the section header of the input image");
     break;
   default:
     break;
@@ -2331,7 +2220,7 @@ Returns:
   //
   // Set new base address into image
   //
-  if (mOutImageType == FW_REBASE_IMAGE || mOutImageType == FW_SET_ADDRESS_IMAGE) {
+  if (mOutImageType == FW_REBASE_IMAGE) {
     if (PeHdr->Pe32.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
       if (NewBaseAddress >= 0x100000000ULL) {
         Error (NULL, 0, 3000, "Invalid", "New base address is larger than 4G for 32bit PE image");
@@ -2345,16 +2234,12 @@ Returns:
       //
       NewBaseAddress = (UINT64) (0 - NewBaseAddress);
     }
-    if (mOutImageType == FW_REBASE_IMAGE) {
-      Status = RebaseImage (mInImageName, FileBuffer, NewBaseAddress);
-    } else {
-      Status = SetAddressToSectionHeader (mInImageName, FileBuffer, NewBaseAddress);
-    }
+    Status = RebaseImage (mInImageName, FileBuffer, NewBaseAddress);
     if (EFI_ERROR (Status)) {
       if (NegativeAddr) {
-        Error (NULL, 0, 3000, "Invalid", "Rebase/Set Image %s to Base address -0x%llx can't success", mInImageName, 0 - NewBaseAddress);
+        Error (NULL, 0, 3000, "Invalid", "Rebase Image %s to Base address -0x%llx can't success", mInImageName, 0 - NewBaseAddress);
       } else {
-        Error (NULL, 0, 3000, "Invalid", "Rebase/Set Image %s to Base address 0x%llx can't success", mInImageName, NewBaseAddress);
+        Error (NULL, 0, 3000, "Invalid", "Rebase Image %s to Base address 0x%llx can't success", mInImageName, NewBaseAddress);
       }
       goto Finish;
     }

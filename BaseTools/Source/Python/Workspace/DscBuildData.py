@@ -299,7 +299,6 @@ class DscBuildData(PlatformBuildClassObject):
         self._DecPcds           = None
         self._BuildOptions      = None
         self._ModuleTypeOptions = None
-        self._LoadFixAddress    = None
         self._RFCLanguages      = None
         self._ISOLanguages      = None
         self._VpdToolGuid       = None
@@ -376,11 +375,6 @@ class DscBuildData(PlatformBuildClassObject):
                 self._PcdInfoFlag = Record[2]
             elif Name == TAB_DSC_DEFINES_PCD_VAR_CHECK_GENERATION:
                 self._VarCheckFlag = Record[2]
-            elif Name == TAB_FIX_LOAD_TOP_MEMORY_ADDRESS:
-                try:
-                    self._LoadFixAddress = int (Record[2], 0)
-                except:
-                    EdkLogger.error("build", PARAMETER_INVALID, "FIX_LOAD_TOP_MEMORY_ADDRESS %s is not valid dec or hex string" % (Record[2]))
             elif Name == TAB_DSC_DEFINES_RFC_LANGUAGES:
                 if not Record[2] or Record[2][0] != '"' or Record[2][-1] != '"' or len(Record[2]) == 1:
                     EdkLogger.error('build', FORMAT_NOT_SUPPORTED, 'language code for RFC_LANGUAGES must have double quotes around it, for example: RFC_LANGUAGES = "en-us;zh-hans"',
@@ -595,37 +589,6 @@ class DscBuildData(PlatformBuildClassObject):
             if self._RtBaseAddress is None:
                 self._RtBaseAddress = ''
         return self._RtBaseAddress
-
-    ## Retrieve the top address for the load fix address
-    @property
-    def LoadFixAddress(self):
-        if self._LoadFixAddress is None:
-            if self._Header is None:
-                self._GetHeaderInfo()
-
-            if self._LoadFixAddress is None:
-                self._LoadFixAddress = self._Macros.get(TAB_FIX_LOAD_TOP_MEMORY_ADDRESS, '0')
-
-            try:
-                self._LoadFixAddress = int (self._LoadFixAddress, 0)
-            except:
-                EdkLogger.error("build", PARAMETER_INVALID, "FIX_LOAD_TOP_MEMORY_ADDRESS %s is not valid dec or hex string" % (self._LoadFixAddress))
-
-        #
-        # If command line defined, should override the value in DSC file.
-        #
-        if 'FIX_LOAD_TOP_MEMORY_ADDRESS' in GlobalData.gCommandLineDefines:
-            try:
-                self._LoadFixAddress = int(GlobalData.gCommandLineDefines['FIX_LOAD_TOP_MEMORY_ADDRESS'], 0)
-            except:
-                EdkLogger.error("build", PARAMETER_INVALID, "FIX_LOAD_TOP_MEMORY_ADDRESS %s is not valid dec or hex string" % (GlobalData.gCommandLineDefines['FIX_LOAD_TOP_MEMORY_ADDRESS']))
-
-        if self._LoadFixAddress < 0:
-            EdkLogger.error("build", PARAMETER_INVALID, "FIX_LOAD_TOP_MEMORY_ADDRESS is set to the invalid negative value 0x%x" % (self._LoadFixAddress))
-        if self._LoadFixAddress != 0xFFFFFFFFFFFFFFFF and self._LoadFixAddress % 0x1000 != 0:
-            EdkLogger.error("build", PARAMETER_INVALID, "FIX_LOAD_TOP_MEMORY_ADDRESS is set to the invalid unaligned 4K value 0x%x" % (self._LoadFixAddress))
-
-        return self._LoadFixAddress
 
     ## Retrieve RFCLanguage filter
     @property

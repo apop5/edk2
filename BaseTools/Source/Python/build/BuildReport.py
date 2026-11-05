@@ -62,10 +62,6 @@ gPcdGuidPattern = re.compile(r"PCD\((\w+)[.](\w+)\)")
 ## Pattern to collect offset, GUID value pair in the flash report intermediate file
 gOffsetGuidPattern = re.compile(r"(0x[0-9A-Fa-f]+) ([-A-Fa-f0-9]+)")
 
-## Pattern to find module base address and entry point in fixed flash map file
-gModulePattern = r"\n[-\w]+\s*\(([^,]+),\s*BaseAddress=%(Address)s,\s*EntryPoint=%(Address)s,\s*Type=\w+\)\s*\(GUID=([-0-9A-Fa-f]+)[^)]*\)"
-gMapFileItemPattern = re.compile(gModulePattern % {"Address" : "(-?0[xX][0-9A-Fa-f]+)"})
-
 ## Pattern to find all module referenced header files in source files
 gIncludePattern  = re.compile(r'#include\s*["<]([^">]+)[">]')
 gIncludePattern2 = re.compile(r"#include\s+EFI_([A-Z_]+)\s*[(]\s*(\w+)\s*[)]")
@@ -616,11 +612,10 @@ class ModuleReport(object):
     # @param self                   The object pointer
     # @param File                   The file object for report
     # @param GlobalPcdReport        The platform global PCD report object
-    # @param GlobalPredictionReport The platform global Prediction report object
     # @param GlobalDepexParser      The platform global Dependency expression parser object
     # @param ReportType             The kind of report items in the final report file
     #
-    def GenerateReport(self, File, GlobalPcdReport, GlobalPredictionReport, GlobalDepexParser, ReportType):
+    def GenerateReport(self, File, GlobalPcdReport, GlobalDepexParser, ReportType):
         FileWrite(File, gSectionStart)
 
         FwReportFileName = os.path.join(self._BuildDir, "OUTPUT", self.ModuleName + ".txt")
@@ -708,9 +703,6 @@ class ModuleReport(object):
 
         if "BUILD_FLAGS" in ReportType:
             self.BuildFlagsReport.GenerateReport(File)
-
-        if "FIXED_ADDRESS" in ReportType and self.FileGuid:
-            GlobalPredictionReport.GenerateReport(File, self.FileGuid)
 
         FileWrite(File, gSectionEnd)
 
@@ -1500,10 +1492,9 @@ class PcdReport(object):
             return False
 
 ##
-# Reports platform and module Prediction information
+# Reports platform execution order prediction information
 #
-# This class reports the platform execution order prediction section and
-# module load fixed address prediction subsection in the build report file.
+# This class reports the platform execution order prediction section.
 #
 class PredictionReport(object):
     ##
@@ -1515,15 +1506,12 @@ class PredictionReport(object):
     # @param Wa              Workspace context information
     #
     def __init__(self, Wa):
-        self._MapFileName = os.path.join(Wa.BuildDir, Wa.Name + ".map")
-        self._MapFileParsed = False
         self._EotToolInvoked = False
         self._FvDir = Wa.FvDir
         self._EotDir = Wa.BuildDir
         self._FfsEntryPoint = {}
         self._GuidMap = {}
         self._SourceList = []
-        self.FixedMapDict = {}
         self.ItemList = []
         self.MaxLen = 0
 
@@ -1589,33 +1577,6 @@ class PredictionReport(object):
                                 except AttributeError:
                                     pass
 
-
-    ##
-    # Parse platform fixed address map files
-    #
-    # This function parses the platform final fixed address map file to get
-    # the database of predicted fixed address for module image base, entry point
-    # etc.
-    #
-    # @param self:           The object pointer
-    #
-    def _ParseMapFile(self):
-        if self._MapFileParsed:
-            return
-        self._MapFileParsed = True
-        if os.path.isfile(self._MapFileName):
-            try:
-                FileContents = open(self._MapFileName).read()
-                for Match in gMapFileItemPattern.finditer(FileContents):
-                    AddressType = Match.group(1)
-                    BaseAddress = Match.group(2)
-                    EntryPoint = Match.group(3)
-                    Guid = Match.group(4).upper()
-                    List = self.FixedMapDict.setdefault(Guid, [])
-                    List.append((AddressType, BaseAddress, "*I"))
-                    List.append((AddressType, EntryPoint, "*E"))
-            except:
-                EdkLogger.warn(None, "Cannot open file to read", self._MapFileName)
 
     ##
     # Invokes EOT tool to get the predicted the execution order.
@@ -1711,78 +1672,13 @@ class PredictionReport(object):
         FileWrite(File, gSectionStart)
 
     ##
-    # Generate Fixed Address report.
-    #
-    # This function generate the predicted fixed address report for a module
-    # specified by Guid.
+    # Generate the predicted module execution order for a platform.
     #
     # @param self            The object pointer
     # @param File            The file object for report
-    # @param Guid            The module Guid value.
-    # @param NotifyList      The list of all notify function in a module
     #
-    def _GenerateFixedAddressReport(self, File, Guid, NotifyList):
-        self._ParseMapFile()
-        FixedAddressList = self.FixedMapDict.get(Guid)
-        if not FixedAddressList:
-            return
-
-        FileWrite(File, gSubSectionStart)
-        FileWrite(File, "Fixed Address Prediction")
-        FileWrite(File, "*I  Image Loading Address")
-        FileWrite(File, "*E  Entry Point Address")
-        FileWrite(File, "*N  Notification Function Address")
-        FileWrite(File, "*F  Flash Address")
-        FileWrite(File, "*M  Memory Address")
-        FileWrite(File, "*S  SMM RAM Offset")
-        FileWrite(File, "TOM Top of Memory")
-
-        FileWrite(File, "Type Address           Name")
-        FileWrite(File, gSubSectionSep)
-        for Item in FixedAddressList:
-            Type = Item[0]
-            Value = Item[1]
-            Symbol = Item[2]
-            if Symbol == "*I":
-                Name = "(Image Base)"
-            elif Symbol == "*E":
-                Name = self._FfsEntryPoint.get(Guid, ["", "_ModuleEntryPoint"])[1]
-            elif Symbol in NotifyList:
-                Name = Symbol
-                Symbol = "*N"
-            else:
-                continue
-
-            if "Flash" in Type:
-                Symbol += "F"
-            elif "Memory" in Type:
-                Symbol += "M"
-            else:
-                Symbol += "S"
-
-            if Value[0] == "-":
-                Value = "TOM" + Value
-
-            FileWrite(File, "%s  %-16s  %s" % (Symbol, Value, Name))
-
-    ##
-    # Generate report for the prediction part
-    #
-    # This function generate the predicted fixed address report for a module or
-    # predicted module execution order for a platform.
-    # If the input Guid is None, then, it generates the predicted module execution order;
-    # otherwise it generated the module fixed loading address for the module specified by
-    # Guid.
-    #
-    # @param self            The object pointer
-    # @param File            The file object for report
-    # @param Guid            The module Guid value.
-    #
-    def GenerateReport(self, File, Guid):
-        if Guid:
-            self._GenerateFixedAddressReport(File, Guid.upper(), [])
-        else:
-            self._GenerateExecutionOrderReport(File)
+    def GenerateReport(self, File):
+        self._GenerateExecutionOrderReport(File)
 
 ##
 # Reports FD region information
@@ -2129,7 +2025,7 @@ class PlatformReport(object):
                 self.FdReportList.append(FdReport(Wa.FdfProfile.FdDict[Fd], Wa))
 
         self.PredictionReport = None
-        if "FIXED_ADDRESS" in ReportType or "EXECUTION_ORDER" in ReportType:
+        if "EXECUTION_ORDER" in ReportType:
             self.PredictionReport = PredictionReport(Wa)
 
         self.DepexParser = None
@@ -2216,11 +2112,11 @@ class PlatformReport(object):
                     FdReportListItem.GenerateReport(File)
 
         for ModuleReportItem in self.ModuleReportList:
-            ModuleReportItem.GenerateReport(File, self.PcdReport, self.PredictionReport, self.DepexParser, ReportType)
+            ModuleReportItem.GenerateReport(File, self.PcdReport, self.DepexParser, ReportType)
 
         if not self._IsModuleBuild:
             if "EXECUTION_ORDER" in ReportType:
-                self.PredictionReport.GenerateReport(File, None)
+                self.PredictionReport.GenerateReport(File)
 
 ## BuildReport class
 #
@@ -2249,7 +2145,7 @@ class BuildReport(object):
                     if ReportTypeItem not in self.ReportType:
                         self.ReportType.append(ReportTypeItem)
             else:
-                self.ReportType = ["PCD", "LIBRARY", "BUILD_FLAGS", "DEPEX", "HASH", "FLASH", "FIXED_ADDRESS"]
+                self.ReportType = ["PCD", "LIBRARY", "BUILD_FLAGS", "DEPEX", "HASH", "FLASH"]
     ##
     # Adds platform report to the list
     #

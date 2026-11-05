@@ -1476,84 +1476,6 @@ Returns:
 }
 
 EFI_STATUS
-SetAddressToSectionHeader (
-  IN     CHAR8   *FileName,
-  IN OUT UINT8   *FileBuffer,
-  IN     UINT64  NewPe32BaseAddress
-  )
-/*++
-
-Routine Description:
-
-  Set new base address into the section header of PeImage
-
-Arguments:
-
-  FileName           - Name of file
-  FileBuffer         - Pointer to PeImage.
-  NewPe32BaseAddress - New Base Address for PE image.
-
-Returns:
-
-  EFI_SUCCESS          Set new base address into this image successfully.
-
---*/
-{
-  EFI_STATUS                            Status;
-  PE_COFF_LOADER_IMAGE_CONTEXT          ImageContext;
-  UINTN                                 Index;
-  EFI_IMAGE_OPTIONAL_HEADER_UNION       *ImgHdr;
-  EFI_IMAGE_SECTION_HEADER              *SectionHeader;
-
-  //
-  // Initialize context
-  //
-  memset (&ImageContext, 0, sizeof (ImageContext));
-  ImageContext.Handle     = (VOID *) FileBuffer;
-  ImageContext.ImageRead  = (PE_COFF_LOADER_READ_FILE) RebaseImageRead;
-  Status                  = PeCoffLoaderGetImageInfo (&ImageContext);
-  if (EFI_ERROR (Status)) {
-    Error (NULL, 0, 3000, "Invalid", "The input PeImage %s is not valid", FileName);
-    return Status;
-  }
-
-  if (ImageContext.RelocationsStripped) {
-    Error (NULL, 0, 3000, "Invalid", "The input PeImage %s has no relocation to be fixed up", FileName);
-    return Status;
-  }
-
-  //
-  // Get PeHeader pointer
-  //
-  ImgHdr = (EFI_IMAGE_OPTIONAL_HEADER_UNION *)(FileBuffer + ImageContext.PeCoffHeaderOffset);
-
-  //
-  // Get section header list
-  //
-  SectionHeader = (EFI_IMAGE_SECTION_HEADER *) (
-    (UINTN) ImgHdr +
-    sizeof (UINT32) +
-    sizeof (EFI_IMAGE_FILE_HEADER) +
-    ImgHdr->Pe32.FileHeader.SizeOfOptionalHeader
-    );
-
-  //
-  // Set base address into the first section header that doesn't point to code section.
-  //
-  for (Index = 0; Index < ImgHdr->Pe32.FileHeader.NumberOfSections; Index ++, SectionHeader ++) {
-    if ((SectionHeader->Characteristics & EFI_IMAGE_SCN_CNT_CODE) == 0) {
-      *(UINT64 *) &SectionHeader->PointerToRelocations = NewPe32BaseAddress;
-      break;
-    }
-  }
-
-  //
-  // BaseAddress is set to section header.
-  //
-  return EFI_SUCCESS;
-}
-
-EFI_STATUS
 RebaseImage (
   IN     CHAR8   *FileName,
   IN OUT UINT8   *FileBuffer,
@@ -1668,12 +1590,7 @@ Returns:
     return EFI_ABORTED;
   }
 
-  //
-  // Set new base address into section header
-  //
-  Status = SetAddressToSectionHeader (FileName, FileBuffer, NewPe32BaseAddress);
-
-  return Status;
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS
@@ -2528,4 +2445,3 @@ Returns:
   fprintf (stdout, "  --sfo\n\
             Reserved for future use\n");
 }
-

@@ -774,8 +774,7 @@ class DscParser(MetaFileParser):
         "RFC_LANGUAGES",
         "ISO_LANGUAGES",
         "TIME_STAMP_FILE",
-        "VPD_TOOL_GUID",
-        "FIX_LOAD_TOP_MEMORY_ADDRESS"
+        "VPD_TOOL_GUID"
     ]
 
     SubSectionDefineKeywords = [
@@ -2098,4 +2097,3 @@ class UniParser(object):
 #
 if __name__ == '__main__':
     pass
-

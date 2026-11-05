@@ -60,7 +60,6 @@ class GenFdsGlobalVariable:
     SharpNumberPerLine = 40
     FdfFile = ''
     FdfFileTimeStamp = 0
-    FixedLoadAddress = False
     PlatformName = ''
 
     BuildRuleFamily = DataType.TAB_COMPILER_MSFT

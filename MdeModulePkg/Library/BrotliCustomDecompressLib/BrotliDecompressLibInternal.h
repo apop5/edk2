@@ -42,3 +42,21 @@ BrotliUefiDecompress (
   IN OUT VOID    *Destination,
   IN OUT VOID    *Scratch
   );
+
+RETURN_STATUS
+EFIAPI
+BrotliGuidedSectionGetInfo (
+  IN  CONST VOID  *InputSection,
+  OUT UINT32      *OutputBufferSize,
+  OUT UINT32      *ScratchBufferSize,
+  OUT UINT16      *SectionAttribute
+  );
+
+RETURN_STATUS
+EFIAPI
+BrotliGuidedSectionExtraction (
+  IN CONST VOID  *InputSection,
+  OUT VOID       **OutputBuffer,
+  OUT VOID       *ScratchBuffer OPTIONAL,
+  OUT UINT32     *AuthenticationStatus
+  );

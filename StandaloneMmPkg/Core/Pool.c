@@ -10,11 +10,6 @@
 #include "StandaloneMmCore.h"
 
 LIST_ENTRY  mMmPoolLists[MAX_POOL_INDEX];
-//
-// To cache the MMRAM base since when Loading modules At fixed address feature is enabled,
-// all module is assigned an offset relative the MMRAM base in build time.
-//
-GLOBAL_REMOVE_IF_UNREFERENCED  EFI_PHYSICAL_ADDRESS  gLoadModuleAtFixAddressMmramBase = 0;
 
 /**
   Called to initialize the memory service.

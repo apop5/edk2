@@ -9,11 +9,6 @@
 #include "PiSmmCore.h"
 
 LIST_ENTRY  mSmmPoolLists[SmmPoolTypeMax][MAX_POOL_INDEX];
-//
-// To cache the SMRAM base since when Loading modules At fixed address feature is enabled,
-// all module is assigned an offset relative the SMRAM base in build time.
-//
-GLOBAL_REMOVE_IF_UNREFERENCED  EFI_PHYSICAL_ADDRESS  gLoadModuleAtFixAddressSmramBase = 0;
 
 /**
   Convert a UEFI memory type to SMM pool type.
@@ -51,10 +46,8 @@ SmmInitializeMemoryServices (
   IN EFI_SMRAM_DESCRIPTOR  *SmramRanges
   )
 {
-  UINTN                                       Index;
-  EFI_STATUS                                  Status;
-  UINTN                                       SmmPoolTypeIndex;
-  EFI_LOAD_FIXED_ADDRESS_CONFIGURATION_TABLE  *LMFAConfigurationTable;
+  UINTN  Index;
+  UINTN  SmmPoolTypeIndex;
 
   //
   // Initialize Pool list
@@ -63,14 +56,6 @@ SmmInitializeMemoryServices (
     for (Index = 0; Index < ARRAY_SIZE (mSmmPoolLists[SmmPoolTypeIndex]); Index++) {
       InitializeListHead (&mSmmPoolLists[SmmPoolTypeIndex][Index]);
     }
-  }
-
-  Status = EfiGetSystemConfigurationTable (
-             &gLoadFixedAddressConfigurationTableGuid,
-             (VOID **)&LMFAConfigurationTable
-             );
-  if (!EFI_ERROR (Status) && (LMFAConfigurationTable != NULL)) {
-    gLoadModuleAtFixAddressSmramBase = LMFAConfigurationTable->SmramBase;
   }
 
   //

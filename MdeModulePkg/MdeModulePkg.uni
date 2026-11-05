@@ -15,15 +15,6 @@
 
 #string STR_PACKAGE_DESCRIPTION         #language en-US "It also provides the definitions (including PPIs/PROTOCOLs/GUIDs and library classes) and libraries instances, which are used for those modules."
 
-
-
-#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdLoadModuleAtFixAddressEnable_PROMPT  #language en-US "Enable LMFA feature"
-
-#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdLoadModuleAtFixAddressEnable_HELP  #language en-US "Flag of enabling/disabling the feature of Loading Module at Fixed Address.<BR><BR>\n"
-                                                                                                 "0xFFFFFFFFFFFFFFFF: Enable the feature as fixed offset to TOLM.<BR>\n"
-                                                                                                 "0: Disable the feature.<BR>\n"
-                                                                                                 "Other Value:        Enable the feature as fixed absolute address, and the value is the top memory address.<BR>"
-
 #string STR_gEfiMdeModulePkgTokenSpaceGuid_ERR_80000001 #language en-US "Invalid value provided."
 
 #string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdProgressCodeOsLoaderLoad_PROMPT  #language en-US "Progress Code for OS Loader LoadImage start."
@@ -632,22 +623,6 @@
 #string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdVideoVerticalResolution_PROMPT  #language en-US "Video vertical resolution"
 
 #string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdVideoVerticalResolution_HELP  #language en-US "This PCD defines the video vertical resolution. If this PCD is set to 0 then video resolution would be at highest resolution."
-
-#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdLoadFixAddressPeiCodePageNumber_PROMPT  #language en-US "LMFA PEI code page number"
-
-#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdLoadFixAddressPeiCodePageNumber_HELP  #language en-US "Specify memory size with page number for PEI code when Loading Module at Fixed Address feature is enabled. The value will be set by the build tool."
-
-#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdLoadFixAddressBootTimeCodePageNumber_PROMPT  #language en-US "LMFA DXE boot code page number"
-
-#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdLoadFixAddressBootTimeCodePageNumber_HELP  #language en-US "Specify memory size with page number for DXE boot time code when Loading Module at Fixed Address feature is enabled. The value will be set by the build tool."
-
-#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdLoadFixAddressRuntimeCodePageNumber_PROMPT  #language en-US "LMFA DXE runtime code page number"
-
-#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdLoadFixAddressRuntimeCodePageNumber_HELP  #language en-US "Specify memory size with page number for DXE runtime code when Loading Module at Fixed Address feature is enabled. The value will be set by the build tool."
-
-#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdLoadFixAddressSmmCodePageNumber_PROMPT  #language en-US "LMFA SMM code page number"
-
-#string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdLoadFixAddressSmmCodePageNumber_HELP  #language en-US "Specify memory size with page number for SMM code when Loading Module at Fixed Address feature is enabled. The value will be set by the build tool."
 
 #string STR_gEfiMdeModulePkgTokenSpaceGuid_PcdSupportUpdateCapsuleReset_PROMPT  #language en-US "Enable update capsule across a system reset"
 

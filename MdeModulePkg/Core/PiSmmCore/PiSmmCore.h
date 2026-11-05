@@ -32,7 +32,6 @@
 #include <Guid/EventGroup.h>
 #include <Guid/EventLegacyBios.h>
 #include <Guid/MemoryProfile.h>
-#include <Guid/LoadModuleAtFixedAddress.h>
 #include <Guid/SmiHandlerProfile.h>
 #include <Guid/EndOfS3Resume.h>
 #include <Guid/S3SmmInitDone.h>
@@ -219,7 +218,6 @@ extern SMM_CORE_PRIVATE_DATA  *gSmmCorePrivate;
 extern SMM_CORE_PRIVATE_DATA  *gSmmCoreMailbox;
 extern EFI_SMM_SYSTEM_TABLE2  gSmmCoreSmst;
 extern LIST_ENTRY             gHandleList;
-extern EFI_PHYSICAL_ADDRESS   gLoadModuleAtFixAddressSmramBase;
 
 /**
   Called to initialize the memory service.

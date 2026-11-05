@@ -295,10 +295,6 @@
   #  Include/Guid/StatusCodeDataTypeDebug.h
   gEfiStatusCodeDataTypeDebugGuid  = { 0x9A4E9246, 0xD553, 0x11D5, { 0x87, 0xE2, 0x00, 0x06, 0x29, 0x45, 0xC3, 0xB9 }}
 
-  ##  A configuration Table Guid for Load module at fixed address
-  #  Include/Guid/LoadModuleAtFixedAddress.h
-  gLoadFixedAddressConfigurationTableGuid  = { 0x2CA88B53,0xD296,0x4080, { 0xA4,0xA5,0xCA,0xD9,0xBA,0xE2,0x4B,0x9 } }
-
   ## GUID used to store the global debug mask value into an EFI Variable
   # Include/Guid/DebugMask.h
   gEfiGenericVariableGuid = { 0x59d1c24f, 0x50f1, 0x401a, {0xb1, 0x01, 0xf3, 0x3e, 0x0d, 0xae, 0xd4, 0x43} }
@@ -1040,14 +1036,6 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdDxeIplBuildPageTables|TRUE|BOOLEAN|0x0001003c
 
 [PcdsFixedAtBuild]
-  ## Flag of enabling/disabling the feature of Loading Module at Fixed Address.<BR><BR>
-  #  0xFFFFFFFFFFFFFFFF: Enable the feature as fixed offset to TOLM.<BR>
-  #  0:                  Disable the feature.<BR>
-  #  Other Value:        Enable the feature as fixed absolute address, and the value is the top memory address.<BR>
-  # @Prompt Enable LMFA feature.
-  # @Expression 0x80000001 | (gEfiMdeModulePkgTokenSpaceGuid.PcdLoadModuleAtFixAddressEnable == 0xFFFFFFFFFFFFFFFF || gEfiMdeModulePkgTokenSpaceGuid.PcdLoadModuleAtFixAddressEnable <= 0x0FFFFFFFFFFFFFFF)
-  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadModuleAtFixAddressEnable|0|UINT64|0x30001015
-
   ## Progress Code for OS Loader LoadImage start.<BR><BR>
   #  PROGRESS_CODE_OS_LOADER_LOAD   = (EFI_SOFTWARE_DXE_BS_DRIVER | (EFI_OEM_SPECIFIC | 0x00000000)) = 0x03058000<BR>
   # @Prompt Progress Code for OS Loader LoadImage start.
@@ -2393,35 +2381,6 @@
   #  FFS file in the firmware volume.<BR><BR>
   # @Prompt Logo FFS file GUID.
   gEfiMdeModulePkgTokenSpaceGuid.PcdLogoFileGuid|{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}|VOID*|0x1000002C
-
-[PcdsPatchableInModule]
-  ## Specify memory size with page number for PEI code when
-  #  Loading Module at Fixed Address feature is enabled.
-  #  The value will be set by the build tool.
-  # @Prompt LMFA PEI code page number.
-  # @ValidList  0x80000001 | 0
-  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadFixAddressPeiCodePageNumber|0|UINT32|0x00000029
-
-  ## Specify memory size with page number for DXE boot time code when
-  #  Loading Module at Fixed Address feature is enabled.
-  #  The value will be set by the build tool.
-  # @Prompt LMFA DXE boot code page number.
-  # @ValidList  0x80000001 | 0
-  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadFixAddressBootTimeCodePageNumber|0|UINT32|0x0000002a
-
-  ## Specify memory size with page number for DXE runtime code when
-  #  Loading Module at Fixed Address feature is enabled.
-  #  The value will be set by the build tool.
-  # @Prompt LMFA DXE runtime code page number.
-  # @ValidList  0x80000001 | 0
-  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadFixAddressRuntimeCodePageNumber|0|UINT32|0x0000002b
-
-  ## Specify memory size with page number for SMM code when
-  #  Loading Module at Fixed Address feature is enabled.
-  #  The value will be set by the build tool.
-  # @Prompt LMFA SMM code page number.
-  # @ValidList  0x80000001 | 0
-  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadFixAddressSmmCodePageNumber|0|UINT32|0x0000002c
 
 [PcdsDynamic, PcdsDynamicEx]
   ## This dynamic PCD hold an address to point to private data structure used in DxeS3BootScriptLib library

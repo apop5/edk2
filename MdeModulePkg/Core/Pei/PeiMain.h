@@ -299,18 +299,6 @@ struct _PEI_CORE_INSTANCE {
   PEICORE_FUNCTION_POINTER          ShadowedPeiCore;
   CACHE_SECTION_DATA                CacheSection;
   //
-  // For Loading modules at fixed address feature to cache the top address below which the
-  // Runtime code, boot time code and PEI memory will be placed. Please note that the offset between this field
-  // and Ps should not be changed since maybe user could get this top address by using the offset to Ps.
-  //
-  EFI_PHYSICAL_ADDRESS              LoadModuleAtFixAddressTopAddress;
-  //
-  // The field is define for Loading modules at fixed address feature to tracker the PEI code
-  // memory range usage. It is a bit mapped array in which every bit indicates the corresponding memory page
-  // available or not.
-  //
-  UINT64                            *PeiCodeMemoryRangeUsageBitMap;
-  //
   // This field points to the shadowed image read function
   //
   PE_COFF_LOADER_READ_FILE          ShadowedImageRead;

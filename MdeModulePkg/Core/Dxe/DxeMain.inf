@@ -116,7 +116,6 @@
   ## SOMETIMES_CONSUMES     ## HOB
   gEfiMemoryTypeInformationGuid
   gEfiEventDxeDispatchGuid                      ## PRODUCES             ## Event
-  gLoadFixedAddressConfigurationTableGuid       ## SOMETIMES_PRODUCES   ## SystemTable
   ## PRODUCES   ## Event
   ## CONSUMES   ## Event
   gIdleLoopEventGuid
@@ -176,9 +175,6 @@
   gEfiWatchdogTimerArchProtocolGuid             ## CONSUMES
 
 [Pcd]
-  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadFixAddressBootTimeCodePageNumber    ## SOMETIMES_CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadFixAddressRuntimeCodePageNumber     ## SOMETIMES_CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadModuleAtFixAddressEnable            ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdMaxEfiSystemTablePointerAddress         ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdMemoryProfileMemoryType                 ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdMemoryProfilePropertyMask               ## CONSUMES

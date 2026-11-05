@@ -88,8 +88,6 @@
   gEdkiiSmmMemoryAttributeProtocolGuid          ## CONSUMES
 
 [Pcd]
-  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadFixAddressSmmCodePageNumber     ## SOMETIMES_CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadModuleAtFixAddressEnable        ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdMemoryProfileMemoryType             ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdMemoryProfilePropertyMask           ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdMemoryProfileDriverPath             ## CONSUMES
@@ -112,8 +110,6 @@
   ## SOMETIMES_PRODUCES   ## GUID # Install protocol
   gEdkiiSmmMemoryProfileGuid
   gEdkiiPiSmmMemoryAttributesTableGuid          ## PRODUCES   ## SystemTable
-  ## SOMETIMES_CONSUMES   ## SystemTable
-  gLoadFixedAddressConfigurationTableGuid
   ## SOMETIMES_PRODUCES   ## GUID # Install protocol
   ## SOMETIMES_PRODUCES   ## GUID # SmiHandlerRegister
   gSmiHandlerProfileGuid

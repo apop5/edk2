@@ -75,12 +75,6 @@ EFI_MEMORY_TYPE_INFORMATION  gMemoryTypeInformation[EfiMaxMemoryType + 1] = {
   { EfiUnacceptedMemoryType,    0 },
   { EfiMaxMemoryType,           0 }
 };
-//
-// Only used when load module at fixed address feature is enabled. True means the memory is alreay successfully allocated
-// and ready to load the module in to specified address.or else, the memory is not ready and module will be loaded at a
-//  address assigned by DXE core.
-//
-GLOBAL_REMOVE_IF_UNREFERENCED   BOOLEAN  gLoadFixedAddressCodeMemoryReady = FALSE;
 
 /**
   Enter critical section by gaining lock on gMemoryLock.
@@ -482,74 +476,6 @@ PromoteMemoryResource (
 }
 
 /**
-  This function try to allocate Runtime code & Boot time code memory range. If LMFA enabled, 2 patchable PCD
-  PcdLoadFixAddressRuntimeCodePageNumber & PcdLoadFixAddressBootTimeCodePageNumber which are set by tools will record the
-  size of boot time and runtime code.
-
-**/
-VOID
-CoreLoadingFixedAddressHook (
-  VOID
-  )
-{
-  UINT32                RuntimeCodePageNumber;
-  UINT32                BootTimeCodePageNumber;
-  EFI_PHYSICAL_ADDRESS  RuntimeCodeBase;
-  EFI_PHYSICAL_ADDRESS  BootTimeCodeBase;
-  EFI_STATUS            Status;
-
-  //
-  // Make sure these 2 areas are not initialzied.
-  //
-  if (!gLoadFixedAddressCodeMemoryReady) {
-    RuntimeCodePageNumber  = PcdGet32 (PcdLoadFixAddressRuntimeCodePageNumber);
-    BootTimeCodePageNumber = PcdGet32 (PcdLoadFixAddressBootTimeCodePageNumber);
-    RuntimeCodeBase        = (EFI_PHYSICAL_ADDRESS)(gLoadModuleAtFixAddressConfigurationTable.DxeCodeTopAddress - EFI_PAGES_TO_SIZE (RuntimeCodePageNumber));
-    BootTimeCodeBase       = (EFI_PHYSICAL_ADDRESS)(RuntimeCodeBase - EFI_PAGES_TO_SIZE (BootTimeCodePageNumber));
-    //
-    // Try to allocate runtime memory.
-    //
-    Status = CoreAllocatePages (
-               AllocateAddress,
-               EfiRuntimeServicesCode,
-               RuntimeCodePageNumber,
-               &RuntimeCodeBase
-               );
-    if (EFI_ERROR (Status)) {
-      //
-      // Runtime memory allocation failed
-      //
-      return;
-    }
-
-    //
-    // Try to allocate boot memory.
-    //
-    Status = CoreAllocatePages (
-               AllocateAddress,
-               EfiBootServicesCode,
-               BootTimeCodePageNumber,
-               &BootTimeCodeBase
-               );
-    if (EFI_ERROR (Status)) {
-      //
-      // boot memory allocation failed. Free Runtime code range and will try the allocation again when
-      // new memory range is installed.
-      //
-      CoreFreePages (
-        RuntimeCodeBase,
-        RuntimeCodePageNumber
-        );
-      return;
-    }
-
-    gLoadFixedAddressCodeMemoryReady = TRUE;
-  }
-
-  return;
-}
-
-/**
   Called to initialize the memory map and add descriptors to
   the current descriptor list.
   The first descriptor that is added must be general usable
@@ -594,13 +520,6 @@ CoreAddMemoryDescriptor (
     Start,
     LShiftU64 (NumberOfPages, EFI_PAGE_SHIFT)
     );
-
-  //
-  // If Loading Module At Fixed Address feature is enabled. try to allocate memory with Runtime code & Boot time code type
-  //
-  if (PcdGet64 (PcdLoadModuleAtFixAddressEnable) != 0) {
-    CoreLoadingFixedAddressHook ();
-  }
 
   // Check if we need to allocate the memory bins. This function will immediately return if we have already done so.
   // Pass FALSE to indicate we don't need to publish the HOB.

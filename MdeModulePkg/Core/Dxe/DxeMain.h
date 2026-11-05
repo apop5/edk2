@@ -57,7 +57,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/EventLegacyBios.h>
 #include <Guid/EventGroup.h>
 #include <Guid/EventExitBootServiceFailed.h>
-#include <Guid/LoadModuleAtFixedAddress.h>
 #include <Guid/IdleLoopEvent.h>
 #include <Guid/VectorHandoffTable.h>
 #include <Ppi/VectorHandoffInfo.h>
@@ -270,8 +269,6 @@ extern EFI_RUNTIME_ARCH_PROTOCOL  gRuntimeTemplate;
 
 extern BOOLEAN  gMemoryAttributesTableForwardCfi;
 
-extern EFI_LOAD_FIXED_ADDRESS_CONFIGURATION_TABLE  gLoadModuleAtFixAddressConfigurationTable;
-extern BOOLEAN                                     gLoadFixedAddressCodeMemoryReady;
 //
 // Service Initialization Functions
 //

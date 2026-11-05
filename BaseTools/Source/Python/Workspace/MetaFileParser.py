@@ -903,7 +903,6 @@ class DscParser(MetaFileParser):
         "ISO_LANGUAGES",
         "TIME_STAMP_FILE",
         "VPD_TOOL_GUID",
-        "FIX_LOAD_TOP_MEMORY_ADDRESS",
         "PREBUILD",
         "POSTBUILD"
     ]
@@ -2234,4 +2233,3 @@ class DecParser(MetaFileParser):
 #
 if __name__ == '__main__':
     pass
-

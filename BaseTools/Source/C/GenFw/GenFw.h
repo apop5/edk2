@@ -25,7 +25,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define FW_HII_PACKAGE_LIST_RCIMAGE   10
 #define FW_HII_PACKAGE_LIST_BINIMAGE  11
 #define FW_REBASE_IMAGE               12
-#define FW_SET_ADDRESS_IMAGE          13
 
 #define DUMP_TE_HEADER  0x11
 

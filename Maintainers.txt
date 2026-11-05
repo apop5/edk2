@@ -305,7 +305,6 @@ F: MdeModulePkg/Include/*StatusCode*.h
 F: MdeModulePkg/Include/Guid/Crc32GuidedSectionExtraction.h
 F: MdeModulePkg/Include/Guid/EventExitBootServiceFailed.h
 F: MdeModulePkg/Include/Guid/IdleLoopEvent.h
-F: MdeModulePkg/Include/Guid/LoadModuleAtFixedAddress.h
 F: MdeModulePkg/Include/Guid/LzmaDecompress.h
 F: MdeModulePkg/Include/Library/SecurityManagementLib.h
 F: MdeModulePkg/Library/*Decompress*/

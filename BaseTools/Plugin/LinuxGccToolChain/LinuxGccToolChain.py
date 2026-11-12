@@ -3,6 +3,7 @@
 ##
 # This plugin sets environment variables used in tools_def.template to specify the GCC compiler
 # for the requested build architecture.
+# Reports compiler and linker paths and versions through the version aggregator.
 #
 # Copyright (c) Microsoft Corporation
 # Copyright (c) 2020, Hewlett Packard Enterprise Development LP. All rights reserved.<BR>
@@ -11,16 +12,37 @@
 ##
 import os
 import logging
+import shutil
+from io import StringIO
 from edk2toolext.environment.plugintypes.uefi_build_plugin import IUefiBuildPlugin
-from edk2toolext.environment import shell_environment
+from edk2toolext.environment import shell_environment, version_aggregator
+from edk2toollib.utility_functions import RunCmd
 
 
 class LinuxGccToolChain(IUefiBuildPlugin):
 
     def do_post_build(self, thebuilder):
+        """Return success without performing any post-build actions.
+
+        Args:
+            thebuilder: Build instance supplied by the plugin framework.
+
+        Returns:
+            Zero.
+        """
         return 0
 
     def do_pre_build(self, thebuilder):
+        """Configure GCC toolchains and report compiler and linker versions.
+
+        Args:
+            thebuilder: Build instance providing the toolchain tag and target
+                architectures.
+
+        Returns:
+            Zero on success or for other toolchain tags, or the nonzero status
+            from a failed toolchain check.
+        """
         self.Logger = logging.getLogger("LinuxGccToolChain")
 
         #
@@ -48,9 +70,57 @@ class LinuxGccToolChain(IUefiBuildPlugin):
                     self.Logger.critical("Failed in check loongarch64")
                     return ret
 
+            env = shell_environment.GetEnvironment()
+            for arch in thebuilder.env.GetValue("TARGET_ARCH", "").split():
+                if arch in ("IA32", "X64"):
+                    prefix = env.get_shell_var("GCC_BIN") or ""
+                elif arch in ("AARCH64", "RISCV64", "LOONGARCH64"):
+                    prefix = env.get_shell_var(f"GCC_{arch}_PREFIX") or ""
+                else:
+                    continue
+                self._report_tool_version(f"GCC_{arch}", prefix + "gcc", "-dumpfullversion -dumpversion")
+                self._report_tool_version(f"GNU_LD_{arch}", prefix + "ld", "--version")
+
         return 0
 
+    def _report_tool_version(self, name, executable, arguments):
+        """Report a tool's resolved path and first line of version output.
+
+        Args:
+            name: Version aggregator key, also used with the "_PATH" suffix.
+            executable: Tool name or path to resolve.
+            arguments: Command-line arguments used to query the version.
+
+        Returns:
+            None. Missing tools, failed commands, and empty output produce
+            warnings without failing the build.
+        """
+        tool_path = shutil.which(executable)
+        if tool_path is None:
+            self.Logger.warning("Could not find %s for tool reporting", executable)
+            return
+
+        aggregator = version_aggregator.GetVersionAggregator()
+        aggregator.ReportVersion(
+            name + "_PATH", tool_path, version_aggregator.VersionTypes.INFO)
+        with StringIO() as output:
+            ret = RunCmd(f'"{tool_path}"', arguments, outstream=output)
+            if ret != 0:
+                self.Logger.warning("%s %s exited with code %d", tool_path, arguments, ret)
+                return
+            lines = output.getvalue().strip().splitlines()
+        if not lines:
+            self.Logger.warning("%s %s produced no output", tool_path, arguments)
+            return
+        aggregator.ReportVersion(name, lines[0].strip(), version_aggregator.VersionTypes.TOOL)
+
     def _check_aarch64(self):
+        """Configure and validate the AARCH64 GCC prefix.
+
+        Returns:
+            Zero if the compiler exists or no prefix or install directory is
+            configured, or -2 if the configured compiler does not exist.
+        """
         # check to see if full path already configured
         if shell_environment.GetEnvironment().get_shell_var("GCC_AARCH64_PREFIX") is not None:
             self.Logger.info("GCC_AARCH64_PREFIX is already set.")
@@ -75,6 +145,12 @@ class LinuxGccToolChain(IUefiBuildPlugin):
         return 0
 
     def _check_riscv64(self):
+        """Configure the RISCV64 GCC prefix and library search path.
+
+        Returns:
+            Zero if no install directory is configured or setup succeeds,
+            or -2 if the configured compiler does not exist.
+        """
         # now check for install dir.  If set then set the Prefix
         install_path = shell_environment.GetEnvironment(
         ).get_shell_var("GCC_RISCV64_INSTALL")
@@ -106,6 +182,12 @@ class LinuxGccToolChain(IUefiBuildPlugin):
         return 0
 
     def _check_loongarch64(self):
+        """Configure and validate the LoongArch64 GCC prefix.
+
+        Returns:
+            Zero if the compiler exists or no prefix or install directory is
+            configured, or -2 if the configured compiler does not exist.
+        """
         # check to see if full path already configured
         if shell_environment.GetEnvironment().get_shell_var("GCC_LOONGARCH64_PREFIX") is not None:
             self.Logger.info("GCC_LOONGARCH64_PREFIX is already set.")
